@@ -177,4 +177,4 @@ npm run dogfood               # run against itself
 
 ## License
 
-MIT © [Your Name]
+MIT © [Neerav Jha](https://github.com/neerav34)
