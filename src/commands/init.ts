@@ -5,7 +5,7 @@ import { scanProjectFiles } from '../core/scanner.js';
 import { detectVarsInFile } from '../core/detector.js';
 import { setColorEnabled, logger } from '../utils/logger.js';
 import { resolveRoot } from '../utils/glob.js';
-import type { InitOptions, EnvVarReference } from '../types/index.js';
+import type { InitOptions, EnvVarReference, EnvVarDefinition } from '../types/index.js';
 
 export async function runInit(options: InitOptions): Promise<void> {
   setColorEnabled(!options.noColor);
@@ -106,7 +106,7 @@ interface BuildContentOptions {
   newVars: string[];
   presentVars: string[];
   foundVarsMap: Map<string, EnvVarReference>;
-  envVars: Map<string, import('../types/index.js').EnvVarDefinition>;
+  envVars: Map<string, EnvVarDefinition>;
   withComments: boolean;
 }
 
@@ -141,7 +141,7 @@ function buildExampleContent(opts: BuildContentOptions): string {
 function formatVar(
   name: string,
   ref: EnvVarReference | undefined,
-  envVars: Map<string, import('../types/index.js').EnvVarDefinition>,
+  envVars: Map<string, EnvVarDefinition>,
   withComments: boolean
 ): string {
   // Use placeholder from .env value (with redaction) if available
