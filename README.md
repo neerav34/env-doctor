@@ -2,8 +2,10 @@
 
 > The eslint of environment variables — catch missing env vars before they hit production.
 
-[![npm version](https://badge.fury.io/js/env-doctor.svg)](https://www.npmjs.com/package/env-doctor)
-[![CI](https://github.com/your-username/env-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/env-doctor/actions)
+**[env-doctor-web.vercel.app](https://env-doctor-web.vercel.app)** · [npm](https://www.npmjs.com/package/@neerav34/env-doctor) · [GitHub Action](https://github.com/marketplace/actions/env-doctor)
+
+[![npm version](https://badge.fury.io/js/%40neerav34%2Fenv-doctor.svg)](https://www.npmjs.com/package/@neerav34/env-doctor)
+[![CI](https://github.com/neerav34/env-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/neerav34/env-doctor/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## The Problem
