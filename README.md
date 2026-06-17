@@ -22,9 +22,9 @@ Developers lose hours debugging "works on my machine" failures caused by missing
 ## Installation
 
 ```bash
-npm install -g env-doctor
+npm install -g @neerav34/env-doctor
 # or use without installing
-npx env-doctor check
+npx @neerav34/env-doctor check
 ```
 
 ## Quick Start
