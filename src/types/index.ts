@@ -48,6 +48,7 @@ export interface CheckOptions {
   format: 'pretty' | 'json' | 'markdown';
   noColor: boolean;
   root: string;
+  monorepo: boolean;
 }
 
 export interface InitOptions {

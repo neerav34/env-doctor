@@ -1,43 +1,36 @@
 import path from 'path';
 import { writeFile, readFile } from 'fs/promises';
+import chalk from 'chalk';
 import { parseEnvFile } from '../core/parser.js';
 import { scanProjectFiles } from '../core/scanner.js';
 import { detectVarsInFile } from '../core/detector.js';
 import { analyze } from '../core/analyzer.js';
 import { reportPretty, reportJson, reportMarkdown } from '../core/reporter.js';
-import { setColorEnabled } from '../utils/logger.js';
+import { setColorEnabled, logger } from '../utils/logger.js';
 import { resolveRoot } from '../utils/glob.js';
+import { findPackageRoots } from '../utils/monorepo.js';
 import type { CheckOptions, ScanResult, EnvVarReference } from '../types/index.js';
 
-export async function runCheck(options: CheckOptions): Promise<void> {
-  const { format, noColor, strict, fix } = options;
-
-  setColorEnabled(!noColor);
-
-  const root = resolveRoot(options.root);
+async function runPackageScan(root: string, options: CheckOptions): Promise<ScanResult> {
   const envFilePath = path.resolve(root, options.envFile);
   const exampleFilePath = path.resolve(root, options.exampleFile);
 
   const start = Date.now();
 
-  // Step 1: Parse .env and .env.example
   const [envResult, exampleResult] = await Promise.all([
     parseEnvFile(envFilePath, false),
     parseEnvFile(exampleFilePath, true),
   ]);
 
-  // Step 2: Scan source files
   const { files, skippedFiles } = await scanProjectFiles(root, {
     ignore: options.ignore,
     respectGitignore: true,
   });
 
-  // Step 3: Detect env var references in all files (parallel)
   const refResults = await Promise.allSettled(
     files.map(file => detectVarsInFile(root, file))
   );
 
-  // Step 4: Aggregate references
   const foundVars = new Map<string, EnvVarReference[]>();
   for (const result of refResults) {
     if (result.status !== 'fulfilled') continue;
@@ -48,16 +41,13 @@ export async function runCheck(options: CheckOptions): Promise<void> {
     }
   }
 
-  // Step 5: Analyze
   const issues = analyze({
     foundVars,
     envVars: envResult.vars,
     exampleVars: exampleResult.vars,
   });
 
-  const duration = Date.now() - start;
-
-  const scanResult: ScanResult = {
+  return {
     projectRoot: root,
     scannedFiles: files.length,
     skippedFiles,
@@ -65,48 +55,113 @@ export async function runCheck(options: CheckOptions): Promise<void> {
     envVars: envResult.vars,
     exampleVars: exampleResult.vars,
     issues,
-    duration,
+    duration: Date.now() - start,
   };
+}
 
-  // Step 6: Auto-fix .env.example if requested
-  if (fix) {
-    await applyFix(scanResult, exampleFilePath);
+async function runMonorepoCheck(options: CheckOptions): Promise<void> {
+  const root = resolveRoot(options.root);
+  const packages = await findPackageRoots(root, options.ignore);
+
+  if (packages.length === 0) {
+    logger.warn('  No packages found. Are you in a monorepo root?\n');
+    process.exit(0);
+    return;
   }
 
-  // Step 7: Report output
-  switch (format) {
+  logger.header(`\n  Monorepo scan — ${packages.length} package${packages.length === 1 ? '' : 's'} found\n`);
+
+  const results: Array<{ pkg: string; result: ScanResult }> = [];
+
+  for (const pkg of packages) {
+    const pkgRoot = path.join(root, pkg);
+    const result = await runPackageScan(pkgRoot, options);
+    results.push({ pkg, result });
+  }
+
+  let totalErrors = 0;
+  let totalWarnings = 0;
+  let totalFiles = 0;
+
+  for (const { pkg, result } of results) {
+    const errors = result.issues.filter(i => i.severity === 'error');
+    const warnings = result.issues.filter(i => i.severity === 'warn');
+    totalErrors += errors.length;
+    totalWarnings += warnings.length;
+    totalFiles += result.scannedFiles;
+
+    const icon = errors.length > 0 ? '❌' : warnings.length > 0 ? '⚠️ ' : '✓ ';
+    logger.bold(`  ${icon}  ${chalk.cyan(pkg)}`);
+
+    if (result.issues.length === 0) {
+      logger.success('       All checks passed\n');
+    } else {
+      for (const issue of result.issues) {
+        const issueIcon = issue.severity === 'error' ? chalk.red('  ❌') : chalk.yellow('  ⚠️ ');
+        logger.log(`    ${issueIcon}  ${chalk.bold(issue.variable.padEnd(20))}  ${chalk.dim(issue.message)}`);
+      }
+      logger.log('');
+    }
+  }
+
+  const sep = '─'.repeat(52);
+  logger.dim_(`  ${sep}`);
+  const summary = [
+    `${packages.length} package${packages.length === 1 ? '' : 's'}`,
+    totalErrors > 0 ? chalk.red(`${totalErrors} error${totalErrors === 1 ? '' : 's'}`) : '0 errors',
+    totalWarnings > 0 ? chalk.yellow(`${totalWarnings} warning${totalWarnings === 1 ? '' : 's'}`) : '0 warnings',
+    `${totalFiles} files`,
+  ].join(' · ');
+  logger.log(`\n  ${summary}\n`);
+
+  const hasErrors = totalErrors > 0;
+  const hasWarns = totalWarnings > 0;
+  if (hasErrors || (options.strict && hasWarns)) process.exit(1);
+  else if (hasWarns) process.exit(2);
+  else process.exit(0);
+}
+
+export async function runCheck(options: CheckOptions): Promise<void> {
+  setColorEnabled(!options.noColor);
+
+  if (options.monorepo) {
+    await runMonorepoCheck(options);
+    return;
+  }
+
+  const root = resolveRoot(options.root);
+  const exampleFilePath = path.resolve(root, options.exampleFile);
+
+  const result = await runPackageScan(root, options);
+
+  if (options.fix) {
+    await applyFix(result, exampleFilePath);
+  }
+
+  switch (options.format) {
     case 'json':
-      reportJson(scanResult);
+      reportJson(result);
       break;
     case 'markdown':
-      reportMarkdown(scanResult);
+      reportMarkdown(result);
       break;
     default:
-      reportPretty(scanResult);
+      reportPretty(result);
   }
 
-  // Step 8: Exit with appropriate code
-  const hasErrors = issues.some(i => i.severity === 'error');
-  const hasWarns = issues.some(i => i.severity === 'warn');
-
-  if (hasErrors || (strict && hasWarns)) {
-    process.exit(1);
-  } else if (hasWarns) {
-    process.exit(2);
-  } else {
-    process.exit(0);
-  }
+  const hasErrors = result.issues.some(i => i.severity === 'error');
+  const hasWarns = result.issues.some(i => i.severity === 'warn');
+  if (hasErrors || (options.strict && hasWarns)) process.exit(1);
+  else if (hasWarns) process.exit(2);
+  else process.exit(0);
 }
 
 async function applyFix(result: ScanResult, exampleFilePath: string): Promise<void> {
   const { foundVars, exampleVars } = result;
 
-  // Collect vars referenced in code but missing from .env.example
   const newVars: string[] = [];
   for (const [name] of foundVars) {
-    if (!exampleVars.has(name)) {
-      newVars.push(name);
-    }
+    if (!exampleVars.has(name)) newVars.push(name);
   }
 
   if (newVars.length === 0) return;
@@ -133,5 +188,5 @@ async function applyFix(result: ScanResult, exampleFilePath: string): Promise<vo
     : additions + '\n';
 
   await writeFile(exampleFilePath, newContent, 'utf-8');
-  console.log(`\n  Fixed: added ${newVars.length} variable(s) to ${result.exampleVars.size > 0 ? exampleFilePath : '.env.example'}`);
+  console.log(`\n  Fixed: added ${newVars.length} variable(s) to .env.example`);
 }
