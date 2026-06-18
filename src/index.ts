@@ -25,6 +25,7 @@ program
   .option('--ignore <patterns...>', 'Additional glob patterns to skip', DEFAULT_IGNORE)
   .option('--no-color', 'Disable ANSI color output')
   .option('--root <path>', 'Project root directory (default: cwd)')
+  .option('--monorepo', 'Scan each package in a monorepo independently', false)
   .addOption(
     new Option('--format <format>', 'Output format').choices(['pretty', 'json', 'markdown']).default('pretty')
   )
@@ -38,6 +39,7 @@ program
       format: (opts['format'] as CheckOptions['format']) ?? 'pretty',
       noColor: !opts['color'],
       root: String(opts['root'] ?? ''),
+      monorepo: Boolean(opts['monorepo']),
     };
     await runCheck(options).catch(fatalError);
   });
@@ -89,6 +91,7 @@ program
       format: (opts['format'] as CheckOptions['format']) ?? 'pretty',
       noColor: !opts['color'],
       root: String(opts['root'] ?? ''),
+      monorepo: false,
     };
     await runDoctor(options).catch(fatalError);
   });
