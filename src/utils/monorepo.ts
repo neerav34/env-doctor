@@ -1,4 +1,4 @@
-import { glob } from 'fast-glob';
+import fg from 'fast-glob';
 import path from 'path';
 
 const MANIFEST_FILES = [
@@ -20,15 +20,10 @@ const ALWAYS_IGNORE = [
   '**/coverage/**',
 ];
 
-/**
- * Finds subdirectories that look like independent packages within a monorepo.
- * A directory qualifies if it contains a recognised project manifest file
- * and is not the root itself.
- */
 export async function findPackageRoots(root: string, extraIgnore: string[] = []): Promise<string[]> {
   const patterns = MANIFEST_FILES.map(f => `**/${f}`);
 
-  const files = await glob(patterns, {
+  const files = await fg(patterns, {
     cwd: root,
     ignore: [...ALWAYS_IGNORE, ...extraIgnore],
     deep: 5,
