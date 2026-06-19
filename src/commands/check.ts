@@ -9,18 +9,37 @@ import { reportPretty, reportJson, reportMarkdown } from '../core/reporter.js';
 import { setColorEnabled, logger } from '../utils/logger.js';
 import { resolveRoot } from '../utils/glob.js';
 import { findPackageRoots } from '../utils/monorepo.js';
+import { discoverEnvFiles } from '../utils/env-files.js';
 import type { CheckOptions, ScanResult, EnvVarReference } from '../types/index.js';
 
 async function runPackageScan(root: string, options: CheckOptions): Promise<ScanResult> {
-  const envFilePath = path.resolve(root, options.envFile);
   const exampleFilePath = path.resolve(root, options.exampleFile);
 
   const start = Date.now();
 
-  const [envResult, exampleResult] = await Promise.all([
-    parseEnvFile(envFilePath, false),
+  // If user explicitly passed --env-file, use only that file.
+  // Otherwise auto-discover all common .env variants and merge them.
+  const isDefaultEnvFile = options.envFile === '.env';
+  const envFilePaths = isDefaultEnvFile
+    ? (await discoverEnvFiles(root)).map(f => path.resolve(root, f))
+    : [path.resolve(root, options.envFile)];
+
+  if (envFilePaths.length === 0) {
+    envFilePaths.push(path.resolve(root, '.env'));
+  }
+
+  const [envResults, exampleResult] = await Promise.all([
+    Promise.all(envFilePaths.map(f => parseEnvFile(f, false))),
     parseEnvFile(exampleFilePath, true),
   ]);
+
+  // Merge all env files — first occurrence of a key wins
+  const mergedEnvVars = new Map<string, import('../types/index.js').EnvVarDefinition>();
+  for (const result of envResults) {
+    for (const [key, def] of result.vars) {
+      if (!mergedEnvVars.has(key)) mergedEnvVars.set(key, def);
+    }
+  }
 
   const { files, skippedFiles } = await scanProjectFiles(root, {
     ignore: options.ignore,
@@ -43,7 +62,7 @@ async function runPackageScan(root: string, options: CheckOptions): Promise<Scan
 
   const issues = analyze({
     foundVars,
-    envVars: envResult.vars,
+    envVars: mergedEnvVars,
     exampleVars: exampleResult.vars,
   });
 
@@ -52,7 +71,7 @@ async function runPackageScan(root: string, options: CheckOptions): Promise<Scan
     scannedFiles: files.length,
     skippedFiles,
     foundVars,
-    envVars: envResult.vars,
+    envVars: mergedEnvVars,
     exampleVars: exampleResult.vars,
     issues,
     duration: Date.now() - start,
