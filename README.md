@@ -4,7 +4,7 @@
 
 **[env-doctor-web.vercel.app](https://env-doctor-web.vercel.app)** · [npm](https://www.npmjs.com/package/@neerav34/env-doctor) · [GitHub Action](https://github.com/marketplace/actions/env-doctor)
 
-[![npm version](https://badge.fury.io/js/%40neerav34%2Fenv-doctor.svg)](https://www.npmjs.com/package/@neerav34/env-doctor)
+[![npm version](https://img.shields.io/npm/v/@neerav34/env-doctor)](https://www.npmjs.com/package/@neerav34/env-doctor)
 [![CI](https://github.com/neerav34/env-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/neerav34/env-doctor/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
