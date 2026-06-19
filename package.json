@@ -1,6 +1,6 @@
 {
   "name": "@neerav34/env-doctor",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "The eslint of environment variables — catch missing env vars before they hit production",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

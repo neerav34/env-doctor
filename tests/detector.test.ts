@@ -63,6 +63,42 @@ describe('detectVarsInContent', () => {
       const refs = detectVarsInContent(code, 'app.ts');
       expect(refs).toHaveLength(2); // Same name, different columns
     });
+
+    it('detects single destructured var from process.env', () => {
+      const refs = detectVarsInContent('const { DATABASE_URL } = process.env;', 'app.ts');
+      expect(refs).toHaveLength(1);
+      expect(refs[0]?.name).toBe('DATABASE_URL');
+    });
+
+    it('detects multiple destructured vars from process.env', () => {
+      const refs = detectVarsInContent('const { DATABASE_URL, STRIPE_KEY, PORT } = process.env;', 'app.ts');
+      const names = refs.map(r => r.name).sort();
+      expect(names).toEqual(['DATABASE_URL', 'PORT', 'STRIPE_KEY']);
+    });
+
+    it('handles destructuring with alias (const { VAR: alias } = process.env)', () => {
+      const refs = detectVarsInContent('const { DATABASE_URL: dbUrl } = process.env;', 'app.ts');
+      expect(refs).toHaveLength(1);
+      expect(refs[0]?.name).toBe('DATABASE_URL');
+    });
+
+    it('handles destructuring with default value', () => {
+      const refs = detectVarsInContent("const { PORT = '3000' } = process.env;", 'app.ts');
+      expect(refs).toHaveLength(1);
+      expect(refs[0]?.name).toBe('PORT');
+    });
+
+    it('handles multiline destructuring', () => {
+      const code = 'const {\n  DATABASE_URL,\n  STRIPE_KEY,\n} = process.env;';
+      const refs = detectVarsInContent(code, 'app.ts');
+      const names = refs.map(r => r.name).sort();
+      expect(names).toEqual(['DATABASE_URL', 'STRIPE_KEY']);
+    });
+
+    it('ignores commented destructuring', () => {
+      const refs = detectVarsInContent('// const { OLD_VAR } = process.env;', 'app.ts');
+      expect(refs).toHaveLength(0);
+    });
   });
 
   describe('Python', () => {

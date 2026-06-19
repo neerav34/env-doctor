@@ -114,6 +114,13 @@ function fileMatchesPattern(filePath: string, extensions: string[]): boolean {
   return extensions.some(e => ext === e || basename === e || basename.endsWith(e));
 }
 
+function extractDestructuredNames(body: string): string[] {
+  return body
+    .split(',')
+    .map(part => (part.split(/[:=]/)[0] ?? '').trim())
+    .filter(name => /^[A-Z_][A-Z0-9_]*$/.test(name));
+}
+
 export function detectVarsInContent(content: string, filePath: string): EnvVarReference[] {
   const lines = content.split('\n');
   const seen = new Set<string>();
@@ -122,7 +129,6 @@ export function detectVarsInContent(content: string, filePath: string): EnvVarRe
   for (const def of PATTERN_DEFS) {
     if (def.extensions && !fileMatchesPattern(filePath, def.extensions)) continue;
 
-    // Create a fresh RegExp per call to avoid lastIndex state issues with /g
     const regex = new RegExp(def.source, 'g');
     let match: RegExpExecArray | null;
 
@@ -135,7 +141,6 @@ export function detectVarsInContent(content: string, filePath: string): EnvVarRe
 
       if (isCommentedLine(lineContent)) continue;
 
-      // Deduplicate by variable + location
       const key = `${varName}:${pos.line}:${pos.column}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -146,6 +151,29 @@ export function detectVarsInContent(content: string, filePath: string): EnvVarRe
         line: pos.line,
         column: pos.column,
         pattern: def.lang,
+        context: lineContent.trim(),
+      });
+    }
+  }
+
+  // JS/TS destructuring: const { VAR1, VAR2 } = process.env
+  const destructureRe = /(?:const|let|var)\s*\{([^}]+)\}\s*=\s*process\.env/gs;
+  let dm: RegExpExecArray | null;
+  while ((dm = destructureRe.exec(content)) !== null) {
+    const pos = getLineColumn(content, dm.index);
+    const lineContent = lines[pos.line - 1] ?? '';
+    if (isCommentedLine(lineContent)) continue;
+
+    for (const varName of extractDestructuredNames(dm[1] ?? '')) {
+      const key = `${varName}:${pos.line}:${pos.column}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      refs.push({
+        name: varName,
+        file: filePath,
+        line: pos.line,
+        column: pos.column,
+        pattern: 'js',
         context: lineContent.trim(),
       });
     }
