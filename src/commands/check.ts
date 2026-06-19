@@ -10,7 +10,7 @@ import { setColorEnabled, logger } from '../utils/logger.js';
 import { resolveRoot } from '../utils/glob.js';
 import { findPackageRoots } from '../utils/monorepo.js';
 import { discoverEnvFiles } from '../utils/env-files.js';
-import type { CheckOptions, ScanResult, EnvVarReference } from '../types/index.js';
+import type { CheckOptions, ScanResult, EnvVarReference, EnvVarDefinition } from '../types/index.js';
 
 async function runPackageScan(root: string, options: CheckOptions): Promise<ScanResult> {
   const exampleFilePath = path.resolve(root, options.exampleFile);
@@ -34,7 +34,7 @@ async function runPackageScan(root: string, options: CheckOptions): Promise<Scan
   ]);
 
   // Merge all env files — first occurrence of a key wins
-  const mergedEnvVars = new Map<string, import('../types/index.js').EnvVarDefinition>();
+  const mergedEnvVars = new Map<string, EnvVarDefinition>();
   for (const result of envResults) {
     for (const [key, def] of result.vars) {
       if (!mergedEnvVars.has(key)) mergedEnvVars.set(key, def);
