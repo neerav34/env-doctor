@@ -1,9 +1,12 @@
 import type { EnvVarReference, EnvVarDefinition, Issue } from '../types/index.js';
+import type { FrameworkInfo } from '../utils/framework.js';
+import { looksLikeSecret } from '../utils/framework.js';
 
 export interface AnalyzerInput {
   foundVars: Map<string, EnvVarReference[]>;
   envVars: Map<string, EnvVarDefinition>;
   exampleVars: Map<string, EnvVarDefinition>;
+  framework?: FrameworkInfo;
 }
 
 /**
@@ -80,6 +83,22 @@ export function analyze(input: AnalyzerInput): Issue[] {
         definition: def,
         suggestion: `Remove ${name} from .env.example if it is no longer needed`,
       });
+    }
+  }
+
+  // Flag browser-exposed vars that look like secrets
+  const { publicPrefix, label } = input.framework ?? {};
+  if (publicPrefix && label) {
+    for (const [name] of foundVars) {
+      if (name.startsWith(publicPrefix) && looksLikeSecret(name)) {
+        issues.push({
+          severity: 'error',
+          type: 'browser-exposure',
+          variable: name,
+          message: `${name} is exposed to the browser by ${label} but looks like a secret`,
+          suggestion: `Remove the ${publicPrefix} prefix or rename to avoid exposing sensitive data`,
+        });
+      }
     }
   }
 

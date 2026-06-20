@@ -10,6 +10,7 @@ import { setColorEnabled, logger } from '../utils/logger.js';
 import { resolveRoot } from '../utils/glob.js';
 import { findPackageRoots } from '../utils/monorepo.js';
 import { discoverEnvFiles } from '../utils/env-files.js';
+import { detectFramework } from '../utils/framework.js';
 import type { CheckOptions, ScanResult, EnvVarReference, EnvVarDefinition } from '../types/index.js';
 
 async function runPackageScan(root: string, options: CheckOptions): Promise<ScanResult> {
@@ -28,9 +29,10 @@ async function runPackageScan(root: string, options: CheckOptions): Promise<Scan
     envFilePaths.push(path.resolve(root, '.env'));
   }
 
-  const [envResults, exampleResult] = await Promise.all([
+  const [envResults, exampleResult, framework] = await Promise.all([
     Promise.all(envFilePaths.map(f => parseEnvFile(f, false))),
     parseEnvFile(exampleFilePath, true),
+    detectFramework(root),
   ]);
 
   // Merge all env files — first occurrence of a key wins
@@ -64,6 +66,7 @@ async function runPackageScan(root: string, options: CheckOptions): Promise<Scan
     foundVars,
     envVars: mergedEnvVars,
     exampleVars: exampleResult.vars,
+    framework,
   });
 
   return {
