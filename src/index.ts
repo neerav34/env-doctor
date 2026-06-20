@@ -3,6 +3,7 @@ import { runCheck } from './commands/check.js';
 import { runInit } from './commands/init.js';
 import { runDoctor } from './commands/doctor.js';
 import { runAudit } from './commands/audit.js';
+import { runDiff } from './commands/diff.js';
 import type { CheckOptions, InitOptions } from './types/index.js';
 
 const DEFAULT_IGNORE = ['node_modules', 'dist', '.git'];
@@ -95,6 +96,26 @@ program
       monorepo: false,
     };
     await runDoctor(options).catch(fatalError);
+  });
+
+// ─── diff command ─────────────────────────────────────────────────────────────
+
+program
+  .command('diff')
+  .description('Show what changed in .env.example since the last git commit')
+  .option('--example-file <path>', 'Path to .env.example file', '.env.example')
+  .option('--no-color', 'Disable ANSI color output')
+  .option('--root <path>', 'Project root directory (default: cwd)')
+  .addOption(
+    new Option('--format <format>', 'Output format').choices(['pretty', 'json']).default('pretty')
+  )
+  .action(async (opts: Record<string, unknown>) => {
+    await runDiff({
+      exampleFile: String(opts['exampleFile'] ?? '.env.example'),
+      noColor: !opts['color'],
+      root: String(opts['root'] ?? ''),
+      format: (opts['format'] as 'pretty' | 'json') ?? 'pretty',
+    }).catch(fatalError);
   });
 
 // ─── audit command ────────────────────────────────────────────────────────────
