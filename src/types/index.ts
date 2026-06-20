@@ -16,7 +16,7 @@ export interface EnvVarDefinition {
 }
 
 export type IssueSeverity = 'error' | 'warn' | 'info';
-export type IssueType = 'missing' | 'unused' | 'example-drift' | 'type-mismatch';
+export type IssueType = 'missing' | 'unused' | 'example-drift' | 'type-mismatch' | 'browser-exposure';
 
 export interface Issue {
   severity: IssueSeverity;
