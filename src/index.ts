@@ -2,6 +2,7 @@ import { Command, Option } from 'commander';
 import { runCheck } from './commands/check.js';
 import { runInit } from './commands/init.js';
 import { runDoctor } from './commands/doctor.js';
+import { runAudit } from './commands/audit.js';
 import type { CheckOptions, InitOptions } from './types/index.js';
 
 const DEFAULT_IGNORE = ['node_modules', 'dist', '.git'];
@@ -94,6 +95,26 @@ program
       monorepo: false,
     };
     await runDoctor(options).catch(fatalError);
+  });
+
+// ─── audit command ────────────────────────────────────────────────────────────
+
+program
+  .command('audit')
+  .description('Scan .env files for real credential values (API keys, tokens, passwords)')
+  .option('--env-file <path>', 'Path to .env file', '.env')
+  .option('--no-color', 'Disable ANSI color output')
+  .option('--root <path>', 'Project root directory (default: cwd)')
+  .addOption(
+    new Option('--format <format>', 'Output format').choices(['pretty', 'json']).default('pretty')
+  )
+  .action(async (opts: Record<string, unknown>) => {
+    await runAudit({
+      envFile: String(opts['envFile'] ?? '.env'),
+      noColor: !opts['color'],
+      root: String(opts['root'] ?? ''),
+      format: (opts['format'] as 'pretty' | 'json') ?? 'pretty',
+    }).catch(fatalError);
   });
 
 function fatalError(err: unknown): never {
