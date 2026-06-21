@@ -62,7 +62,7 @@ function validateConfig(raw: unknown, filename: string): EnvDoctorConfig {
     if (!['pretty', 'json', 'markdown'].includes(obj['format'] as string)) {
       throw new Error(`${filename}: format must be one of: pretty, json, markdown`);
     }
-    config.format = obj['format'] as EnvDoctorConfig['format'];
+    config.format = obj['format'] as 'pretty' | 'json' | 'markdown';
   }
   if ('monorepo' in obj) {
     if (typeof obj['monorepo'] !== 'boolean') throw new Error(`${filename}: monorepo must be a boolean`);
