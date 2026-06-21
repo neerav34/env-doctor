@@ -4,9 +4,12 @@ import { runInit } from './commands/init.js';
 import { runDoctor } from './commands/doctor.js';
 import { runAudit } from './commands/audit.js';
 import { runDiff } from './commands/diff.js';
+import { loadConfig, mergeConfig } from './utils/config.js';
+import { resolveRoot } from './utils/glob.js';
 import type { CheckOptions, InitOptions } from './types/index.js';
 
 const DEFAULT_IGNORE = ['node_modules', 'dist', '.git'];
+const DEFAULT_CHECK = { fix: false, strict: false, envFile: '.env', exampleFile: '.env.example', ignore: DEFAULT_IGNORE, format: 'pretty', noColor: false, root: '', monorepo: false };
 
 const program = new Command();
 
@@ -32,17 +35,20 @@ program
     new Option('--format <format>', 'Output format').choices(['pretty', 'json', 'markdown']).default('pretty')
   )
   .action(async (opts: Record<string, unknown>) => {
-    const options: CheckOptions = {
+    const root = resolveRoot(String(opts['root'] ?? ''));
+    const cfg = await loadConfig(root);
+    const cli = {
       fix: Boolean(opts['fix']),
       strict: Boolean(opts['strict']),
       envFile: String(opts['envFile'] ?? '.env'),
       exampleFile: String(opts['exampleFile'] ?? '.env.example'),
       ignore: Array.isArray(opts['ignore']) ? (opts['ignore'] as string[]) : DEFAULT_IGNORE,
-      format: (opts['format'] as CheckOptions['format']) ?? 'pretty',
+      format: ((opts['format'] as CheckOptions['format']) ?? 'pretty'),
       noColor: !opts['color'],
-      root: String(opts['root'] ?? ''),
+      root,
       monorepo: Boolean(opts['monorepo']),
     };
+    const options: CheckOptions = mergeConfig(cli, cfg, DEFAULT_CHECK);
     await runCheck(options).catch(fatalError);
   });
 
@@ -84,7 +90,9 @@ program
     new Option('--format <format>', 'Output format').choices(['pretty', 'json', 'markdown']).default('pretty')
   )
   .action(async (opts: Record<string, unknown>) => {
-    const options = {
+    const root = resolveRoot(String(opts['root'] ?? ''));
+    const cfg = await loadConfig(root);
+    const cli = {
       fix: false,
       strict: Boolean(opts['strict']),
       envFile: String(opts['envFile'] ?? '.env'),
@@ -92,9 +100,10 @@ program
       ignore: Array.isArray(opts['ignore']) ? (opts['ignore'] as string[]) : DEFAULT_IGNORE,
       format: (opts['format'] as CheckOptions['format']) ?? 'pretty',
       noColor: !opts['color'],
-      root: String(opts['root'] ?? ''),
+      root,
       monorepo: false,
     };
+    const options = mergeConfig(cli, cfg, DEFAULT_CHECK);
     await runDoctor(options).catch(fatalError);
   });
 
