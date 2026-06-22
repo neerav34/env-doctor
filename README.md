@@ -2,7 +2,7 @@
 
 > The eslint of environment variables — catch missing env vars before they hit production.
 
-**[env-doctor-web.vercel.app](https://env-doctor-web.vercel.app)** · [npm](https://www.npmjs.com/package/@neerav34/env-doctor) · [GitHub Action](https://github.com/marketplace/actions/env-doctor)
+**[env-doctor-web.vercel.app](https://env-doctor-web.vercel.app)** · [npm](https://www.npmjs.com/package/@neerav34/env-doctor) · [GitHub Action](https://github.com/marketplace/actions/env-doctor) · [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=neeravjha.env-doctor)
 
 [![npm version](https://img.shields.io/npm/v/@neerav34/env-doctor)](https://www.npmjs.com/package/@neerav34/env-doctor)
 [![CI](https://github.com/neerav34/env-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/neerav34/env-doctor/actions)
@@ -11,6 +11,10 @@
 ## The Problem
 
 Developers lose hours debugging "works on my machine" failures caused by missing, misconfigured, or undocumented environment variables. `env-doctor` gives you a fast, zero-config CLI that scans your codebase, detects all env var references, and cross-checks them against your `.env` and `.env.example` files.
+
+## VS Code Extension
+
+Get inline squiggles directly in your editor — no terminal needed. Install **[env-doctor](https://marketplace.visualstudio.com/items?itemName=neeravjha.env-doctor)** from the VS Code Marketplace.
 
 ## Features
 
