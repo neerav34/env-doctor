@@ -4,6 +4,7 @@ import { runInit } from './commands/init.js';
 import { runDoctor } from './commands/doctor.js';
 import { runAudit } from './commands/audit.js';
 import { runDiff } from './commands/diff.js';
+import { runGenerateValidator } from './commands/generate-validator.js';
 import { loadConfig, mergeConfig } from './utils/config.js';
 import { resolveRoot } from './utils/glob.js';
 import type { CheckOptions, InitOptions } from './types/index.js';
@@ -144,6 +145,26 @@ program
       noColor: !opts['color'],
       root: String(opts['root'] ?? ''),
       format: (opts['format'] as 'pretty' | 'json') ?? 'pretty',
+    }).catch(fatalError);
+  });
+
+// ─── generate-validator command ───────────────────────────────────────────────
+
+program
+  .command('generate-validator')
+  .description('Generate a runtime startup script that crashes the app if required env vars are missing')
+  .option('--example-file <path>', 'Path to .env.example file', '.env.example')
+  .option('--output <path>', 'Output file path (default: env-validator.js or env-validator.ts)')
+  .option('--typescript', 'Generate TypeScript instead of JavaScript', false)
+  .option('--no-color', 'Disable ANSI color output')
+  .option('--root <path>', 'Project root directory (default: cwd)')
+  .action(async (opts: Record<string, unknown>) => {
+    await runGenerateValidator({
+      exampleFile: String(opts['exampleFile'] ?? '.env.example'),
+      output: String(opts['output'] ?? ''),
+      typescript: Boolean(opts['typescript']),
+      noColor: !opts['color'],
+      root: String(opts['root'] ?? ''),
     }).catch(fatalError);
   });
 
