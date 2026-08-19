@@ -8,12 +8,21 @@
 [![CI](https://github.com/neerav34/env-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/neerav34/env-doctor/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Documentation
+## INTERNAL
 
-Full reference manual — scan pipeline internals, every command and flag, VS Code
-extension, CI integration, detection patterns, and troubleshooting:
-**[env-doctor Reference Manual](https://env-doctor-web.vercel.app/docs.html)**
-*(passphrase-protected · hint: Remedy)*
+Full internal documentation — scan pipeline internals, every design decision, the
+builder's deep dive, all commands and flags, VS Code extension, CI integration,
+detection patterns, and troubleshooting:
+**[env-doctor Field Manual](https://env-doctor-web.vercel.app/docs.html)**
+
+Passphrase required. Hint: *Landline*.
+
+The page is served from this project's own domain and depends on nothing else. Its
+body is AES-GCM encrypted under a key derived from the passphrase, so the text is
+genuinely not present in the file — a wrong passphrase fails to decrypt rather
+than being waved through. The plaintext source and the builder live outside the
+repository ([`docs/` is ignored](.gitignore)); committing them would make the
+passphrase decorative.
 
 ## The Problem
 
