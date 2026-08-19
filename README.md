@@ -8,22 +8,6 @@
 [![CI](https://github.com/neerav34/env-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/neerav34/env-doctor/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## INTERNAL
-
-Full internal documentation — scan pipeline internals, every design decision, the
-builder's deep dive, all commands and flags, VS Code extension, CI integration,
-detection patterns, and troubleshooting:
-**[env-doctor Field Manual](https://env-doctor-web.vercel.app/docs.html)**
-
-Passphrase required. Hint: *Landline*.
-
-The page is served from this project's own domain and depends on nothing else. Its
-body is AES-GCM encrypted under a key derived from the passphrase, so the text is
-genuinely not present in the file — a wrong passphrase fails to decrypt rather
-than being waved through. The plaintext source and the builder live outside the
-repository ([`docs/` is ignored](.gitignore)); committing them would make the
-passphrase decorative.
-
 ## The Problem
 
 Developers lose hours debugging "works on my machine" failures caused by missing, misconfigured, or undocumented environment variables. `env-doctor` gives you a fast, zero-config CLI that scans your codebase, detects all env var references, and cross-checks them against your `.env` and `.env.example` files.
@@ -321,6 +305,22 @@ npm test                      # run tests
 npm run build                 # build to dist/
 npm run dogfood               # run against itself
 ```
+
+## INTERNAL
+
+Full internal documentation — scan pipeline internals, every design decision, the
+builder's deep dive, all commands and flags, VS Code extension, CI integration,
+detection patterns, and troubleshooting:
+**[env-doctor Field Manual](https://env-doctor-web.vercel.app/docs.html)**
+
+Passphrase required. Hint: *Landline*.
+
+The page is served from this project's own domain and depends on nothing else. Its
+body is AES-GCM encrypted under a key derived from the passphrase, so the text is
+genuinely not present in the file — a wrong passphrase fails to decrypt rather
+than being waved through. The plaintext source and the builder live outside the
+repository ([`docs/` is ignored](.gitignore)); committing them would make the
+passphrase decorative.
 
 ## License
 
