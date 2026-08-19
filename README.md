@@ -13,6 +13,7 @@
 Full reference manual — scan pipeline internals, every command and flag, VS Code
 extension, CI integration, detection patterns, and troubleshooting:
 **[env-doctor Reference Manual](https://env-doctor-web.vercel.app/docs.html)**
+*(passphrase-protected · hint: Remedy)*
 
 ## The Problem
 
