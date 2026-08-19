@@ -8,6 +8,12 @@
 [![CI](https://github.com/neerav34/env-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/neerav34/env-doctor/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Documentation
+
+Full reference manual — scan pipeline internals, every command and flag, VS Code
+extension, CI integration, detection patterns, and troubleshooting:
+**[env-doctor Reference Manual](https://env-doctor-web.vercel.app/docs.html)**
+
 ## The Problem
 
 Developers lose hours debugging "works on my machine" failures caused by missing, misconfigured, or undocumented environment variables. `env-doctor` gives you a fast, zero-config CLI that scans your codebase, detects all env var references, and cross-checks them against your `.env` and `.env.example` files.
