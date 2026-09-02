@@ -199,10 +199,9 @@ export async function runCheck(options: CheckOptions): Promise<void> {
     ) return;
 
     if (debounce) clearTimeout(debounce);
-    debounce = setTimeout(async () => {
+    debounce = setTimeout(() => {
       clear();
-      await scanAndReport(root, options).catch(() => {});
-      footer();
+      scanAndReport(root, options).catch(() => {}).finally(footer);
     }, 250);
   });
 
