@@ -49,6 +49,7 @@ export interface CheckOptions {
   noColor: boolean;
   root: string;
   monorepo: boolean;
+  watch: boolean;
 }
 
 export interface InitOptions {
