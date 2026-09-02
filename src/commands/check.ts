@@ -1,4 +1,5 @@
 import path from 'path';
+import { watch } from 'fs';
 import { writeFile, readFile } from 'fs/promises';
 import chalk from 'chalk';
 import { parseEnvFile } from '../core/parser.js';
@@ -143,6 +144,27 @@ async function runMonorepoCheck(options: CheckOptions): Promise<void> {
   else process.exit(0);
 }
 
+async function scanAndReport(root: string, options: CheckOptions): Promise<number> {
+  const exampleFilePath = path.resolve(root, options.exampleFile);
+  const result = await runPackageScan(root, options);
+
+  if (options.fix) {
+    await applyFix(result, exampleFilePath);
+  }
+
+  switch (options.format) {
+    case 'json':     reportJson(result);     break;
+    case 'markdown': reportMarkdown(result); break;
+    default:         reportPretty(result);
+  }
+
+  const hasErrors = result.issues.some(i => i.severity === 'error');
+  const hasWarns  = result.issues.some(i => i.severity === 'warn');
+  if (hasErrors || (options.strict && hasWarns)) return 1;
+  if (hasWarns) return 2;
+  return 0;
+}
+
 export async function runCheck(options: CheckOptions): Promise<void> {
   setColorEnabled(!options.noColor);
 
@@ -152,30 +174,43 @@ export async function runCheck(options: CheckOptions): Promise<void> {
   }
 
   const root = resolveRoot(options.root);
-  const exampleFilePath = path.resolve(root, options.exampleFile);
 
-  const result = await runPackageScan(root, options);
-
-  if (options.fix) {
-    await applyFix(result, exampleFilePath);
+  if (!options.watch) {
+    const code = await scanAndReport(root, options);
+    process.exit(code);
   }
 
-  switch (options.format) {
-    case 'json':
-      reportJson(result);
-      break;
-    case 'markdown':
-      reportMarkdown(result);
-      break;
-    default:
-      reportPretty(result);
-  }
+  // ── watch mode ────────────────────────────────────────────────────────────
+  const clear = () => process.stdout.write('\x1Bc');
+  const footer = () => logger.dim_(`\n  Watching for changes… ${chalk.dim('(Ctrl+C to stop)')}\n`);
 
-  const hasErrors = result.issues.some(i => i.severity === 'error');
-  const hasWarns = result.issues.some(i => i.severity === 'warn');
-  if (hasErrors || (options.strict && hasWarns)) process.exit(1);
-  else if (hasWarns) process.exit(2);
-  else process.exit(0);
+  clear();
+  await scanAndReport(root, options);
+  footer();
+
+  let debounce: ReturnType<typeof setTimeout> | null = null;
+
+  const watcher = watch(root, { recursive: true }, (_, filename) => {
+    if (!filename) return;
+    if (
+      filename.includes('node_modules') ||
+      filename.includes('.git') ||
+      filename.includes('.env-doctor')
+    ) return;
+
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(async () => {
+      clear();
+      await scanAndReport(root, options).catch(() => {});
+      footer();
+    }, 250);
+  });
+
+  process.on('SIGINT', () => {
+    watcher.close();
+    process.stdout.write('\n');
+    process.exit(0);
+  });
 }
 
 async function applyFix(result: ScanResult, exampleFilePath: string): Promise<void> {
