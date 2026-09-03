@@ -225,6 +225,37 @@ npx @neerav34/env-doctor generate-validator
 
 The validator reads from `.env.example` — so every var you document there becomes a hard requirement at startup. Add `env-validator.js` to your `.gitignore` is **not recommended** — commit it so every environment gets the same startup check.
 
+### `env-doctor sync`
+
+Interactively fill in any keys missing from `.env` that are listed in `.env.example`. The onboarding command — new teammates run this once after cloning instead of hunting through the codebase for required variables.
+
+```bash
+env-doctor sync [options]
+
+Options:
+  --env-file <path>        Path to .env file (default: .env)
+  --example-file <path>    Path to .env.example file (default: .env.example)
+  --no-color               Disable ANSI color output
+  --root <path>            Project root directory (default: cwd)
+```
+
+**Example:**
+
+```
+$ env-doctor sync
+
+  env-doctor sync
+  3 keys missing from .env — press Enter to leave blank
+
+  DATABASE_URL: postgres://localhost:5432/myapp
+  JWT_SECRET: supersecret
+  PORT: 3000
+
+  Added 3 keys to .env ✓
+```
+
+Keys already set in `.env` are left untouched. Press `Enter` to leave a key blank, `Ctrl+C` to abort without writing anything.
+
 ## What It Detects
 
 | Check | Severity | Description |
