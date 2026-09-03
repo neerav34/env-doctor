@@ -52,6 +52,13 @@ export interface CheckOptions {
   watch: boolean;
 }
 
+export interface SyncOptions {
+  envFile: string;
+  exampleFile: string;
+  noColor: boolean;
+  root: string;
+}
+
 export interface InitOptions {
   envFile: string;
   exampleFile: string;

@@ -10,6 +10,7 @@ export default defineConfig({
   splitting: false,
   minify: false,
   shims: false,
+  external: ['readline/promises'],
   banner: {
     js: '#!/usr/bin/env node',
   },

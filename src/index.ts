@@ -5,6 +5,7 @@ import { runDoctor } from './commands/doctor.js';
 import { runAudit } from './commands/audit.js';
 import { runDiff } from './commands/diff.js';
 import { runGenerateValidator } from './commands/generate-validator.js';
+import { runSync } from './commands/sync.js';
 import { loadConfig, mergeConfig } from './utils/config.js';
 import { resolveRoot } from './utils/glob.js';
 import type { CheckOptions, InitOptions } from './types/index.js';
@@ -168,6 +169,24 @@ program
       typescript: Boolean(opts['typescript']),
       noColor: !opts['color'],
       root: String(opts['root'] ?? ''),
+    }).catch(fatalError);
+  });
+
+// ─── sync command ─────────────────────────────────────────────────────────────
+
+program
+  .command('sync')
+  .description('Interactively fill in any keys missing from .env that are in .env.example')
+  .option('--env-file <path>', 'Path to .env file', '.env')
+  .option('--example-file <path>', 'Path to .env.example file', '.env.example')
+  .option('--no-color', 'Disable ANSI color output')
+  .option('--root <path>', 'Project root directory (default: cwd)')
+  .action(async (opts: Record<string, unknown>) => {
+    await runSync({
+      envFile:     String(opts['envFile']     ?? '.env'),
+      exampleFile: String(opts['exampleFile'] ?? '.env.example'),
+      noColor:     !opts['color'],
+      root:        String(opts['root']        ?? ''),
     }).catch(fatalError);
   });
 
