@@ -62,9 +62,20 @@ Options:
   --example-file <path>    Path to .env.example file (default: .env.example)
   --ignore <patterns...>   Additional glob patterns to skip
   --format <fmt>           Output format: pretty | json | markdown (default: pretty)
+  --watch                  Re-scan automatically when files change
+  --annotate               Emit GitHub Actions ::error/::warning annotations for inline PR squiggles
   --no-color               Disable ANSI color output
   --root <path>            Project root directory (default: cwd)
 ```
+
+**`--annotate` in CI:**
+
+```yaml
+- name: env-doctor
+  run: npx @neerav34/env-doctor check --annotate --format markdown >> $GITHUB_STEP_SUMMARY
+```
+
+Issues appear as inline red/yellow squiggles on the PR diff — same UX as ESLint in CI. Can be combined with any `--format`.
 
 **Exit codes:**
 | Code | Meaning |
