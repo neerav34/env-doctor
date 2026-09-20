@@ -6,7 +6,7 @@ import { parseEnvFile } from '../core/parser.js';
 import { scanProjectFiles } from '../core/scanner.js';
 import { detectVarsInFile } from '../core/detector.js';
 import { analyze } from '../core/analyzer.js';
-import { reportPretty, reportJson, reportMarkdown } from '../core/reporter.js';
+import { reportPretty, reportJson, reportMarkdown, reportAnnotations } from '../core/reporter.js';
 import { setColorEnabled, logger } from '../utils/logger.js';
 import { resolveRoot } from '../utils/glob.js';
 import { findPackageRoots } from '../utils/monorepo.js';
@@ -157,6 +157,8 @@ async function scanAndReport(root: string, options: CheckOptions): Promise<numbe
     case 'markdown': reportMarkdown(result); break;
     default:         reportPretty(result);
   }
+
+  if (options.annotate) reportAnnotations(result);
 
   const hasErrors = result.issues.some(i => i.severity === 'error');
   const hasWarns  = result.issues.some(i => i.severity === 'warn');

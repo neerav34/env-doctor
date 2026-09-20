@@ -11,7 +11,7 @@ import { resolveRoot } from './utils/glob.js';
 import type { CheckOptions, InitOptions } from './types/index.js';
 
 const DEFAULT_IGNORE = ['node_modules', 'dist', '.git'];
-const DEFAULT_CHECK = { fix: false, strict: false, envFile: '.env', exampleFile: '.env.example', ignore: DEFAULT_IGNORE, format: 'pretty', noColor: false, root: '', monorepo: false, watch: false };
+const DEFAULT_CHECK = { fix: false, strict: false, envFile: '.env', exampleFile: '.env.example', ignore: DEFAULT_IGNORE, format: 'pretty', noColor: false, root: '', monorepo: false, watch: false, annotate: false };
 
 const program = new Command();
 
@@ -34,6 +34,7 @@ program
   .option('--root <path>', 'Project root directory (default: cwd)')
   .option('--monorepo', 'Scan each package in a monorepo independently', false)
   .option('--watch', 'Re-scan automatically when files change', false)
+  .option('--annotate', 'Emit GitHub Actions workflow commands (::error/::warning) for inline PR annotations', false)
   .addOption(
     new Option('--format <format>', 'Output format').choices(['pretty', 'json', 'markdown']).default('pretty')
   )
@@ -51,6 +52,7 @@ program
       root,
       monorepo: Boolean(opts['monorepo']),
       watch: Boolean(opts['watch']),
+      annotate: Boolean(opts['annotate']),
     };
     const options: CheckOptions = mergeConfig(cli, cfg, DEFAULT_CHECK);
     await runCheck(options).catch(fatalError);
@@ -107,6 +109,7 @@ program
       root,
       monorepo: false,
       watch: false,
+      annotate: false,
     };
     const options = mergeConfig(cli, cfg, DEFAULT_CHECK);
     await runDoctor(options).catch(fatalError);
