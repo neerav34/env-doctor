@@ -205,6 +205,30 @@ function issueToMarkdown(issue: Issue): string {
   return parts.join('\n');
 }
 
+// ─── GitHub Actions Annotations ──────────────────────────────────────────────
+
+export function reportAnnotations(result: ScanResult): void {
+  for (const issue of result.issues) {
+    const level = issue.severity === 'error' ? 'error' : 'warning';
+    const title = `env-doctor: ${issue.variable}`;
+    const msg   = issue.suggestion
+      ? `${issue.message} — ${issue.suggestion}`
+      : issue.message;
+
+    if (issue.references && issue.references.length > 0) {
+      for (const ref of issue.references) {
+        const loc = `file=${ref.file},line=${ref.line},col=${ref.column}`;
+        console.log(`::${level} ${loc},title=${title}::${msg}`);
+      }
+    } else if (issue.definition) {
+      const loc = `file=${issue.definition.file},line=${issue.definition.line}`;
+      console.log(`::${level} ${loc},title=${title}::${msg}`);
+    } else {
+      console.log(`::${level} title=${title}::${msg}`);
+    }
+  }
+}
+
 // ─── Doctor Format ────────────────────────────────────────────────────────────
 
 export function reportDoctor(result: ScanResult, health: HealthReport): void {
