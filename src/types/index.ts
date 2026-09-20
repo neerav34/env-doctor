@@ -50,6 +50,7 @@ export interface CheckOptions {
   root: string;
   monorepo: boolean;
   watch: boolean;
+  annotate: boolean;
 }
 
 export interface SyncOptions {
